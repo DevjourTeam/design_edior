@@ -1,71 +1,40 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import { getConfig } from './config/editorConfig'
-import { useDesignLoader } from './hooks/useDesignLoader'
-import CustomCanvasEditor from './components/CustomCanvasEditor'
-import TemplateEditor from './components/TemplateEditor'
+import { EditorProvider } from './editor/EditorProvider'
+import EditorShell from './components/shell/EditorShell'
 import { preloadAllFonts } from './utils/fontLoader'
-import './styles/main.css'
+import './styles/tokens.css'
+import './styles/nxicons.css'
+import './styles/shell.css'
+
+/**
+ * App — boots the new pixel-perfect editor shell on the engine.
+ *
+ * Phase 0: loads a demo "Arched" document so the shell is visible in dev.
+ * Real Shopify document loading (useDesignLoader → shape/size from metaobject)
+ * wires back in here once the engine UI is locked in.
+ */
+
+// Demo document — mirrors the reference (sailboard arch, 100×200 cm).
+const DEMO_DOC = {
+  id: 'demo-arch',
+  name: 'Arched',
+  shape: { type: 'arch', svgPath: null },
+  sizeCm: { w: 100.02, h: 200 },
+  dpi: 150,
+  background: { type: 'none', value: null },
+}
 
 export default function App() {
   const { productTitle } = getConfig()
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-
-  const { design, designType, loading, error, retry } = useDesignLoader()
 
   useEffect(() => {
     preloadAllFonts()
   }, [])
 
-  useEffect(() => {
-    if (design && designType) {
-      console.log('Design loaded:', designType, design)
-    }
-  }, [design, designType])
-
-  if (loading) {
-    return (
-      <div className="editor-root">
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
-          <p>Loading your design from Shopify...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="editor-root">
-        <div className="error-overlay">
-          <p>Could not load design: {error}</p>
-          <button className="retry-btn" onClick={retry}>Retry</button>
-        </div>
-      </div>
-    )
-  }
-
-  if (designType === 'canvas') {
-    return (
-      <CustomCanvasEditor
-        design={design}
-        variantId={getConfig().variantId}
-        productTitle={getConfig().productTitle}
-        editorTitle="Design Editor"
-      />
-    )
-  }
-
-  if (designType === 'template') {
-    return (
-      <TemplateEditor
-        design={design}
-        variantId={getConfig().variantId}
-        productTitle={getConfig().productTitle}
-        editorTitle="Template Editor"
-      />
-    )
-  }
-
-  return null
+  return (
+    <EditorProvider initialDoc={DEMO_DOC}>
+      <EditorShell productTitle={productTitle || 'Create Your ...'} price="£109.99" />
+    </EditorProvider>
+  )
 }

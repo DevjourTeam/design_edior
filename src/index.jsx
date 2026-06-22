@@ -1,21 +1,17 @@
 import { createRoot } from 'react-dom/client'
 import App from './App'
 
+/**
+ * Mounts the editor into #design-editor.
+ *
+ * Note: the legacy `/view` AdminView (Fabric v5) is retired during the
+ * Photoshop-engine rebuild. It can be re-introduced on the new engine later.
+ */
 function mount() {
   const container = document.getElementById('design-editor')
   if (!container) return
-
-  const isAdminView = window.location.pathname === '/view'
-
-  if (isAdminView) {
-    import('./pages/AdminView').then(({ default: AdminView }) => {
-      const root = createRoot(container)
-      root.render(<AdminView />)
-    })
-  } else {
-    const root = createRoot(container)
-    root.render(<App />)
-  }
+  const root = createRoot(container)
+  root.render(<App />)
 }
 
 if (document.readyState === 'loading') {
