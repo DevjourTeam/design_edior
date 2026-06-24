@@ -850,6 +850,50 @@
 }
 .ps-field span { font-size: 10px; color: var(--ps-muted); font-weight: 600; }
 
+/* ======================= shapes ======================= */
+.ps-shapegrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.ps-shapecell {
+  aspect-ratio: 1 / 1;
+  background: var(--ps-surface);
+  border: 1px solid var(--ps-border);
+  border-radius: var(--ps-r-sm);
+  cursor: pointer;
+  padding: 12px;
+  display: grid;
+  place-items: center;
+  transition: border-color var(--ps-ease), box-shadow var(--ps-ease);
+}
+.ps-shapecell:hover { border-color: var(--ps-gold); box-shadow: var(--ps-shadow-sm); }
+.ps-shapecell svg { display: block; }
+
+.ps-shaperow {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--ps-border); padding: 12px 2px;
+}
+.ps-shaperow__l { font-family: var(--ps-font-ui); font-weight: 600; font-size: var(--ps-fs-sm); color: var(--ps-ink); }
+.ps-artsize--inline { display: flex; align-items: center; gap: 6px; }
+.ps-artsize--inline .ps-input { width: 56px; }
+
+/* Hollow toggle switch */
+.ps-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 2px; cursor: pointer; border-bottom: 1px solid var(--ps-border);
+}
+.ps-toggle__l { font-family: var(--ps-font-ui); font-weight: 600; font-size: var(--ps-fs-sm); color: var(--ps-ink); }
+.ps-toggle__sw { position: relative; width: 40px; height: 22px; flex: 0 0 auto; }
+.ps-toggle__sw input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.ps-toggle__track { position: absolute; inset: 0; background: var(--ps-border-2); border-radius: 11px; transition: background 0.2s; }
+.ps-toggle__track::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; box-shadow: var(--ps-shadow-sm); transition: transform 0.2s;
+}
+.ps-toggle__sw input:checked + .ps-toggle__track { background: var(--ps-gold); }
+.ps-toggle__sw input:checked + .ps-toggle__track::after { transform: translateX(18px); }
+
 /* ======================= MAIN (canvas column) ======================= */
 .ps-main {
   display: flex;

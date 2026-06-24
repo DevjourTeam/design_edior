@@ -88,6 +88,36 @@ export default function CanvasStage() {
     // the untouched, full-resolution original source — used by the crop window
     const imgOrig = (o) => o.getSrc?.() || o._element?.src || null
 
+    // keep an element (and therefore its corner controls) inside the canvas/shape:
+    //  - cap its scale so it never exceeds the printable bounds
+    //  - clamp its position so no edge crosses the boundary
+    // padding leaves room for the 26px corner icons so they stay fully visible.
+    const BOUND_PAD = 20
+    const constrainObject = (obj) => {
+      if (!obj || obj.__chrome) return
+      // getBoundingRect() is in canvas space (zoom-independent), as is getWidth/Height
+      const cw = fc.getWidth()
+      const ch = fc.getHeight()
+      const maxW = cw - BOUND_PAD * 2
+      const maxH = ch - BOUND_PAD * 2
+      // cap scale (uniform — resize keeps aspect) so the object fits the bounds
+      if (obj.width && obj.height) {
+        const maxScale = Math.min(maxW / obj.width, maxH / obj.height)
+        if (obj.scaleX > maxScale) obj.scaleX = maxScale
+        if (obj.scaleY > maxScale) obj.scaleY = maxScale
+      }
+      obj.setCoords()
+      // clamp position to keep the bounding box inside the boundary
+      const r = obj.getBoundingRect()
+      let { left, top } = obj
+      let moved = false
+      if (r.left < BOUND_PAD) { left += BOUND_PAD - r.left; moved = true }
+      if (r.top < BOUND_PAD) { top += BOUND_PAD - r.top; moved = true }
+      if (r.left + r.width > cw - BOUND_PAD) { left += cw - BOUND_PAD - (r.left + r.width); moved = true }
+      if (r.top + r.height > ch - BOUND_PAD) { top += ch - BOUND_PAD - (r.top + r.height); moved = true }
+      if (moved) { obj.set({ left, top }); obj.setCoords() }
+    }
+
     const updateDimLabel = () => {
       const el2 = dimLabelRef.current
       if (!el2) return
@@ -144,10 +174,10 @@ export default function CanvasStage() {
     fc.on('selection:cleared', syncSelection)
     fc.on('object:added', () => { syncLayers(); pushHistory() })
     fc.on('object:removed', () => { syncLayers(); pushHistory(); updateDimLabel() })
-    fc.on('object:modified', () => { pushHistory(); syncSelection() })
-    // live dimension label while moving / scaling / rotating
-    fc.on('object:moving', updateDimLabel)
-    fc.on('object:scaling', updateDimLabel)
+    fc.on('object:modified', (e) => { constrainObject(e.target); pushHistory(); syncSelection() })
+    // live dimension label + boundary constraint while moving / scaling / rotating
+    fc.on('object:moving', (e) => { constrainObject(e.target); updateDimLabel() })
+    fc.on('object:scaling', (e) => { constrainObject(e.target); updateDimLabel() })
     fc.on('object:rotating', updateDimLabel)
     fc.on('after:render', () => { if (fc.getActiveObject()) updateDimLabel() })
 
@@ -158,6 +188,8 @@ export default function CanvasStage() {
       obj.__id = genId()
       applyObjectControls(obj)
       fc.add(obj)
+      fc.centerObject(obj)
+      constrainObject(obj)
       fc.centerObject(obj)
       fc.setActiveObject(obj)
       fc.requestRenderAll()
@@ -182,6 +214,21 @@ export default function CanvasStage() {
         s.__name = 'Shape'
         placeCenter(s)
         return s.__id
+      },
+      addShapePath: (d, opts = {}) => {
+        const p = new Path(d, {
+          fill: '#1b2333',
+          stroke: '#1b2333',
+          strokeWidth: 0,
+          strokeUniform: true, // keep border width constant when scaling
+          ...opts,
+        })
+        const target = (fabricRef.current?.getWidth() || 400) * 0.42
+        p.scaleToWidth(target)
+        p.__kind = 'shape'
+        p.__name = 'Shape'
+        placeCenter(p)
+        return p.__id
       },
       addImage: async (url, opts = {}) => {
         const img = await FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
@@ -357,6 +404,7 @@ export default function CanvasStage() {
         if (!o) return
         o.set(props)
         o.setCoords()
+        constrainObject(o) // auto-shrink text that grew past the boundary
         fc.requestRenderAll()
         updateDimLabel()
       },

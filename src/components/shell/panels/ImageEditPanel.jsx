@@ -37,6 +37,18 @@ export default function ImageEditPanel({ onEdit, onCrop, onFilter }) {
 
   return (
     <div className="ps-panel ps-imgedit">
+      <button
+        type="button"
+        className="ps-panel__back"
+        onClick={() => { api.canvas.current.deselect(); api.setTool(null) }}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        Back
+      </button>
+
       {/* preview */}
       <div className="ps-imgedit__preview">
         <div className="ps-imgedit__thumb ps-checker">

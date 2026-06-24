@@ -6,6 +6,8 @@ import ImageAdjustPanel from './panels/ImageAdjustPanel'
 import CropPanel from './panels/CropPanel'
 import FilterPanel from './panels/FilterPanel'
 import TextPanel from './panels/TextPanel'
+import ShapeLibraryPanel from './panels/ShapeLibraryPanel'
+import ShapeEditPanel from './panels/ShapeEditPanel'
 
 const TOOLS = [
   {
@@ -34,6 +36,7 @@ export default function ToolSidebar() {
 
   const isImageSelected = selection.count === 1 && selection.kind === 'image'
   const isTextSelected = selection.count === 1 && selection.kind === 'text'
+  const isShapeSelected = selection.count === 1 && selection.kind === 'shape'
 
   // when the image is deselected, drop back to the main image view
   useEffect(() => {
@@ -59,6 +62,24 @@ export default function ToolSidebar() {
   const onSub = (subId) => {
     setActiveSub(subId)
     // Sub-panels (clipart grid, backgrounds, shapes, gallery, QR) wire in next.
+  }
+
+  // A selected shape shows the shape editor.
+  if (isShapeSelected) {
+    return (
+      <aside className="ps-sidebar">
+        <ShapeEditPanel />
+      </aside>
+    )
+  }
+
+  // Shapes library (from Add Designs → Shapes library)
+  if (activeSub === 'shapes') {
+    return (
+      <aside className="ps-sidebar">
+        <ShapeLibraryPanel onBack={() => setActiveSub(null)} />
+      </aside>
+    )
   }
 
   // Selecting an image overrides everything: show the image-editing panels.
